@@ -60,12 +60,14 @@
       '$window', '$document', 'browserHelper', function($window, $document, browserHelper) {
         return {
           restrict: 'A',
-          scope: {},
+          scope: {
+            contentWidth: '=?'
+          },
           replace: true,
           transclude: true,
           template: '<div ng-transclude msd-wheel="wheel($event, $delta, $deltaX, $deltaY)"></div>',
           link: function(scope, element, attrs) {
-            var a, allowClick, calcxMin, clickFudge, contElm, doTransform, endTypes, f, has3d, interactionCurrent, interactionStart, maxv, moveTypes, moveTypesArray, naxv, onWinResize, prevInteraction, run, spring, startTypes, v, winElm, xMin, xOff;
+            var a, allowClick, calcContentWidth, calcxMin, clickFudge, contElm, contentWidth, doTransform, endTypes, f, has3d, interactionCurrent, interactionStart, maxv, moveTypes, moveTypesArray, naxv, onWinResize, prevInteraction, run, spring, startTypes, v, winElm, xMin, xOff;
             a = attrs.acceleration || 1.05;
             f = attrs.friction || 0.95;
             spring = attrs.springBack || 0.1;
@@ -85,9 +87,7 @@
             interactionStart = null;
             interactionCurrent = null;
             prevInteraction = null;
-            if (attrs.contentWidth) {
-              contElm.css('width', attrs.contentWidth + 'px');
-            }
+            contentWidth = scope.contentWidth;
             has3d = browserHelper.has3d();
             $document.bind(endTypes, function(event) {
               var el, ev, type, _i, _len, _results;
@@ -96,9 +96,11 @@
                 if (interactionStart === null || (Math.abs(interactionCurrent.x - interactionStart.x) < clickFudge && Math.abs(interactionCurrent.y - interactionStart.y) < clickFudge)) {
                   allowClick = true;
                   el = document.elementFromPoint(interactionCurrent.x, interactionCurrent.y);
-                  ev = document.createEvent("MouseEvent");
-                  ev.initMouseEvent("click", true, true, window, null, interactionCurrent.x, interactionCurrent.y, 0, 0, false, false, false, false, 0, null);
-                  el.dispatchEvent(ev);
+                  if (el != null) {
+                    ev = document.createEvent("MouseEvent");
+                    ev.initMouseEvent("click", true, true, window, null, interactionCurrent.x, interactionCurrent.y, 0, 0, false, false, false, false, 0, null);
+                    el.dispatchEvent(ev);
+                  }
                 } else {
                   v = prevInteraction.x - interactionCurrent.x;
                   setTimeout((function() {
@@ -191,9 +193,28 @@
               }
             };
             calcxMin = function() {
-              return xMin = $window.innerWidth - attrs.contentWidth;
+              return xMin = $window.innerWidth - contentWidth;
             };
+            calcContentWidth = function() {
+              var c, chs, _i, _len;
+              if (scope.contentWidth) {
+                contentWidth = scope.contentWidth;
+              } else {
+                chs = element.children().eq(0).children();
+                contentWidth = 0;
+                for (_i = 0, _len = chs.length; _i < _len; _i++) {
+                  c = chs[_i];
+                  contentWidth += c.clientWidth;
+                }
+              }
+              return contElm.css('width', contentWidth + 'px');
+            };
+            calcContentWidth();
+            if (attrs.hasOwnProperty('contentWidth')) {
+              scope.$watch('contentWidth', calcContentWidth);
+            }
             onWinResize = function() {
+              calcContentWidth();
               calcxMin();
               if (xOff < xMin) {
                 return xOff = xMin;
