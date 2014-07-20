@@ -3,6 +3,8 @@ kinetic-slider
 
 If you'd like to contribute to this project, PRs are appreciated.
 
+**Note:** If you're interested in this project, you probably should really look at my fork  [infinite-slider](https://github.com/gilbox/infinite-slider). It has many more features and has gone through significant testing.
+
 #How do I add this to my project?
 
 You can download this by:
